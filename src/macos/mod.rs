@@ -272,10 +272,10 @@ fn gui_domain() -> String {
     format!("gui/{uid}")
 }
 
-pub fn install(config: &Path) -> Result<(), String> {
-    crate::config::load_or_create(config)?;
-    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    let plist = format!(
+/// LaunchAgent definition. launchd restarts KeyNinja only after a crash
+/// (non-zero exit); "Quit KeyNinja" exits with 0 and stays quit.
+fn agent_plist(exe: &Path, config: &Path) -> String {
+    format!(
         r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -289,7 +289,10 @@ pub fn install(config: &Path) -> Result<(), String> {
         <string>{}</string>
     </array>
     <key>RunAtLoad</key><true/>
-    <key>KeepAlive</key><true/>
+    <key>KeepAlive</key>
+    <dict>
+        <key>SuccessfulExit</key><false/>
+    </dict>
     <key>ProcessType</key><string>Interactive</string>
     <key>StandardErrorPath</key><string>/tmp/keyninja.log</string>
 </dict>
@@ -297,7 +300,13 @@ pub fn install(config: &Path) -> Result<(), String> {
 "#,
         xml_escape(&exe.to_string_lossy()),
         xml_escape(&config.to_string_lossy())
-    );
+    )
+}
+
+pub fn install(config: &Path) -> Result<(), String> {
+    crate::config::load_or_create(config)?;
+    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    let plist = agent_plist(&exe, config);
     let path = agent_plist_path();
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
@@ -318,4 +327,26 @@ pub fn uninstall() -> Result<(), String> {
     }
     println!("Autostart removed");
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    #[test]
+    fn agent_plist_restarts_only_after_crash() {
+        let plist = agent_plist(Path::new("/Apps/Key & Ninja/keyninja"), Path::new("/tmp/<cfg>.toml"));
+        let mut child = Command::new("plutil")
+            .args(["-extract", "KeepAlive.SuccessfulExit", "raw", "-o", "-", "-"])
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap();
+        child.stdin.take().unwrap().write_all(plist.as_bytes()).unwrap();
+        let out = child.wait_with_output().unwrap();
+        assert!(out.status.success(), "invalid plist:\n{plist}");
+        assert_eq!(String::from_utf8_lossy(&out.stdout).trim(), "false");
+    }
 }
