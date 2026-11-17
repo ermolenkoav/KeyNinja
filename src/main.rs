@@ -32,18 +32,18 @@ Options:
   -v, --verbose         log every app switch and layout change
 ";
 
-/// Общий обработчик для платформенных бэкендов.
+/// Shared handler used by the platform backends.
 pub struct Switcher {
     pub config: Config,
     pub config_path: PathBuf,
     pub verbose: bool,
-    /// Приостановка из меню: события приходят, но раскладка не трогается.
+    /// Paused from the menu: events still arrive, but the layout is left alone.
     pub paused: std::cell::Cell<bool>,
 }
 
 impl Switcher {
-    /// Вызывается бэкендом при активации приложения.
-    /// `ids` — идентификаторы приложения, `select` — функция переключения раскладки.
+    /// Called by the backend when an application is activated.
+    /// `ids` are the app identifiers, `select` switches the layout.
     pub fn on_activate(&self, ids: &[&str], select: impl FnOnce(&str) -> Result<bool, String>) {
         if self.paused.get() {
             if self.verbose {

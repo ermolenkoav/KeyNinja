@@ -1,4 +1,4 @@
-//! macOS: NSWorkspace-уведомления об активации приложений + Text Input Sources (Carbon).
+//! macOS: NSWorkspace app activation notifications + Text Input Sources (Carbon).
 
 mod menubar;
 
@@ -56,8 +56,8 @@ fn prop_string(src: TISInputSourceRef, key: CFStringRef) -> Option<String> {
     }
 }
 
-/// Список включённых пользователем клавиатурных источников ввода.
-/// Источники живут, пока жив `list` (освобождается в Drop).
+/// Keyboard input sources enabled by the user.
+/// The sources stay valid while `list` is alive (released in Drop).
 struct SourceList {
     list: CFArrayRef,
     items: Vec<Source>,
@@ -105,7 +105,7 @@ impl SourceList {
         }
     }
 
-    /// Поиск по: точному ID → имени → основному языку → любому из языков.
+    /// Lookup order: exact ID -> name -> primary language -> any language.
     fn find(&self, spec: &str) -> Option<&Source> {
         let eq = |a: &str| a.eq_ignore_ascii_case(spec);
         self.items
@@ -137,7 +137,7 @@ fn current_source_id() -> Option<String> {
     }
 }
 
-/// Включает раскладку. Ok(true) — переключили, Ok(false) — уже была включена.
+/// Selects a layout. Ok(true) if switched, Ok(false) if it was already active.
 fn select(spec: &str) -> Result<bool, String> {
     let sources = SourceList::enabled();
     let src = sources.find(spec).ok_or_else(|| {
@@ -160,7 +160,7 @@ fn app_ids(app: &NSRunningApplication) -> (String, String) {
 }
 
 fn handle(switcher: &Switcher, app: &NSRunningApplication) {
-    // Собственные окна (например, «О программе») не должны менять раскладку.
+    // Our own windows (e.g. About) must not change the layout.
     if app.processIdentifier() as u32 == std::process::id() {
         return;
     }
@@ -169,7 +169,7 @@ fn handle(switcher: &Switcher, app: &NSRunningApplication) {
 }
 
 pub fn run(switcher: Switcher) -> Result<(), String> {
-    // Проверяем раскладки из конфига заранее, чтобы опечатки было видно сразу.
+    // Validate configured layouts up front so typos show up immediately.
     let sources = SourceList::enabled();
     let specs = switcher.config.default.iter().chain(switcher.config.rules.iter().map(|r| &r.layout));
     for spec in specs {
@@ -183,7 +183,7 @@ pub fn run(switcher: Switcher) -> Result<(), String> {
 
     let mtm = MainThreadMarker::new().ok_or("must run on the main thread")?;
     let app = NSApplication::sharedApplication(mtm);
-    // Только значок в строке меню: без Dock и без главного меню.
+    // Menu bar icon only: no Dock icon and no main menu.
     app.setActivationPolicy(NSApplicationActivationPolicy::Accessory);
 
     let switcher = Rc::new(switcher);
@@ -219,7 +219,7 @@ pub fn run(switcher: Switcher) -> Result<(), String> {
     Ok(())
 }
 
-/// Применить правило к текущему активному приложению.
+/// Applies the matching rule to the current frontmost app.
 fn apply_frontmost(switcher: &Switcher) {
     if let Some(app) = NSWorkspace::sharedWorkspace().frontmostApplication() {
         handle(switcher, &app);

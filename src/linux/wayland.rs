@@ -1,9 +1,9 @@
-//! Wayland: заглушка.
+//! Wayland: stub.
 //!
-//! В Wayland нет общего протокола для отслеживания активного окна и смены
-//! раскладки — нужна отдельная реализация под каждое окружение
-//! (GNOME Shell — расширение/D-Bus, KDE — KWin scripting + org.kde.keyboard,
-//! Sway/Hyprland — их IPC). Будет сделано позже.
+//! Wayland has no common protocol for tracking the active window or switching
+//! the layout, so each desktop needs its own implementation
+//! (GNOME Shell: extension/D-Bus, KDE: KWin scripting + org.kde.keyboard,
+//! Sway/Hyprland: their IPC). Planned for a future release.
 
 use crate::Switcher;
 

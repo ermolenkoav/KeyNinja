@@ -51,7 +51,7 @@ pub struct Rule {
     pub layout: String,
 }
 
-/// Что делать при активации приложения.
+/// What to do when an application is activated.
 #[derive(Debug, PartialEq)]
 pub enum Action<'a> {
     Switch(&'a str),
@@ -63,7 +63,7 @@ impl Config {
         toml::from_str(text).map_err(|e| e.to_string())
     }
 
-    /// `ids` — все идентификаторы приложения (bundle id, имя, WM_CLASS...).
+    /// `ids` are all identifiers of the app (bundle id, name, WM_CLASS...).
     pub fn action_for(&self, ids: &[&str]) -> Action<'_> {
         let ids: Vec<String> = ids.iter().map(|s| s.to_lowercase()).collect();
         let hit = |pattern: &String| {
@@ -93,7 +93,7 @@ pub fn default_path() -> PathBuf {
     PathBuf::from(home).join(".config/keyninja/config.toml")
 }
 
-/// Загружает конфиг; если файла нет — создаёт его со значениями по умолчанию.
+/// Loads the config, creating it with default contents if it does not exist.
 pub fn load_or_create(path: &Path) -> Result<Config, String> {
     if !path.exists() {
         if let Some(dir) = path.parent() {

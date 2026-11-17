@@ -1,4 +1,4 @@
-//! Linux: выбор бэкенда по типу сессии.
+//! Linux: picks a backend based on the session type.
 
 mod wayland;
 mod x11;

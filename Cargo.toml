@@ -2,7 +2,7 @@
 name = "keyninja"
 version = "0.1.0"
 edition = "2024"
-description = "Автоматическое переключение раскладки клавиатуры при смене активного приложения"
+description = "Automatically switches the keyboard layout when the active application changes"
 
 [dependencies]
 serde = { version = "1.0.229", features = ["derive"] }

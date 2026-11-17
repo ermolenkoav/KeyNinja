@@ -1,4 +1,4 @@
-//! Linux (X11): слежение за _NET_ACTIVE_WINDOW + переключение группы XKB.
+//! Linux (X11): watches _NET_ACTIVE_WINDOW and locks the XKB group.
 
 use crate::Switcher;
 use std::path::{Path, PathBuf};
@@ -65,7 +65,7 @@ impl X {
             .unwrap_or_default()
     }
 
-    /// Раскладки из _XKB_RULES_NAMES: "rules\0model\0us,ru\0variants\0options\0".
+    /// Layouts from _XKB_RULES_NAMES: "rules\0model\0us,ru\0variants\0options\0".
     fn layouts(&self) -> Vec<String> {
         self.property(self.root, self.rules_names, AtomEnum::STRING)
             .and_then(|v| {
@@ -86,7 +86,7 @@ impl X {
         }
         let layouts = self.layouts();
         let spec = spec.to_ascii_lowercase();
-        // Коды языков, у которых раскладка XKB называется иначе.
+        // Language codes whose XKB layout name differs.
         let aliases: &[&str] = match spec.as_str() {
             "en" => &["us", "gb"],
             "uk" => &["ua"],

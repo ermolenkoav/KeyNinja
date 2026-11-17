@@ -1,4 +1,4 @@
-//! Значок в строке меню: пауза/возобновление, «О программе», выход.
+//! Menu bar icon: pause/resume, About, Quit.
 
 use crate::Switcher;
 use objc2::rc::Retained;
@@ -11,9 +11,9 @@ use objc2_app_kit::{
 use objc2_foundation::{NSData, NSSize, NSString};
 use std::rc::Rc;
 
-/// Монохромный template-значок (macOS сама красит его под светлую/тёмную тему).
+/// Monochrome template icon (macOS tints it for light/dark mode).
 const MENUBAR_ICON: &[u8] = include_bytes!("../../assets/menubar.png");
-/// Полноцветная иконка приложения (для окна «О программе»).
+/// Full-color app icon (used in the About window).
 const APP_ICON: &[u8] = include_bytes!("../../assets/DonStrike.ico");
 
 pub struct Ivars {
@@ -121,7 +121,7 @@ impl MenuBar {
         let this: Retained<Self> = unsafe { msg_send![super(this), init] };
 
         let menu = NSMenu::new(mtm);
-        // Пункты включаем вручную, иначе AppKit ищет target по responder chain.
+        // Enable items manually; otherwise AppKit validates them via the responder chain.
         menu.setAutoenablesItems(false);
         for item in [&pause_item, &about_item, &quit_item] {
             unsafe { item.setTarget(Some(&this)) };
@@ -149,7 +149,7 @@ impl MenuBar {
         iv.state_item.setTitle(&NSString::from_str(state));
         iv.pause_item.setTitle(&NSString::from_str(action));
         if let Some(button) = iv.status_item.button(self.mtm()) {
-            // Значок «гаснет», пока программа на паузе.
+            // Dim the icon while paused.
             button.setAppearsDisabled(paused);
             button.setToolTip(Some(&NSString::from_str(tip)));
         }
