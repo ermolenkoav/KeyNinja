@@ -26,7 +26,7 @@ By default it turns on **English** whenever you switch to any app, and **Russian
 Requires [Rust](https://rustup.rs).
 
 ```sh
-git clone https://github.com/<your-username>/KeyNinja.git
+git clone https://github.com/ermolenkoav/KeyNinja.git
 cd KeyNinja
 ./scripts/bundle-macos.sh          # builds target/KeyNinja.app
 cp -R target/KeyNinja.app /Applications/
